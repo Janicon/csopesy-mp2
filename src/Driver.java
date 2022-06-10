@@ -6,17 +6,17 @@ public class Driver {
 
         // int numPassengers, int carCapacity, int numCars
         Station station = new Station(3, 2, 1);
-        Semaphore numCapacity = new Semaphore(2);
+        Semaphore slotsAvailable = new Semaphore(2);
         Semaphore loadZone = new Semaphore(1);
         Semaphore unloadZone = new Semaphore(1);
 
         for(int i = 0; i < 3; i++) {
-            Thread thread = new Thread(new Passenger(i, station, numCapacity, loadZone, unloadZone));
+            Thread thread = new Thread(new Passenger(i, station, slotsAvailable));
             thread.start();
         }
 
         for(int i = 0; i < 1; i++) {
-            Thread thread = new Thread(new Car(i, unloadZone, loadZone, numCapacity));
+            Thread thread = new Thread(new Car(i, unloadZone, loadZone, slotsAvailable));
             thread.start();
         }
     }

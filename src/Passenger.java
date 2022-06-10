@@ -17,8 +17,7 @@ public class Passenger implements Runnable {
     private Semaphore sem;
 
     // Semaphore here is the same one assigned to station (probably need a better way to have the semaphores shared)
-    public Passenger(int id, Station station, Semaphore numCapacity,
-                     Semaphore loadZone, Semaphore unloadZone) {
+    public Passenger(int id, Station station, Semaphore numCapacity) {
         this.id = id;
         this.station = station;
         this.state = State.WANDERING;
