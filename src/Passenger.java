@@ -3,25 +3,16 @@ import java.util.concurrent.Semaphore;
 
 public class Passenger implements Runnable {
 
-    enum State {
-        WANDERING,
-        INLINE,
-        DONE
-    }
-
     private Random random = new Random();
-    private State state;
     private int id;
-    private int carID;
-    private Station station;
-    private Semaphore sem;
+    private Semaphore slotsAvailable;
+    private Semaphore boardFinished;
 
     // Semaphore here is the same one assigned to station (probably need a better way to have the semaphores shared)
-    public Passenger(int id, Station station, Semaphore numCapacity) {
+    public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished) {
         this.id = id;
-        this.station = station;
-        this.state = State.WANDERING;
-        this.sem = numCapacity;
+        this.slotsAvailable = slotsAvailable;
+        this.boardFinished = boardFinished;
     }
 
     /*
@@ -40,18 +31,13 @@ public class Passenger implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        // After wandering for x seconds, set state to inline
-        state = State.INLINE;
-
     }
 
     public void board() {
-
         // Passengers cannot board until the car has invoked load
         try {
             // acquire lock (numCapacity -= 1) // if sem == 0, will be stuck in waiting state
-            sem.acquire();
+            slotsAvailable.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -59,12 +45,16 @@ public class Passenger implements Runnable {
         System.out.println("Passenger " + id + " has boarded.");
 
         // Execute rest of the code
-        assignCar(station.getCarInLoading()); // assign the car to the passenger
-        state = State.DONE; // the passenger has boarded
+        // assignCar(station.getCarInLoading()); // assign the car to the passenger
+        // state = State.DONE; // the passenger has boarded
+
+        if(slotsAvailable.availablePermits() == 0)
+            boardFinished.release();
     }
 
     public void unboard() {
 
+        System.out.println("Passenger " + id + " has unboarded.");
         // Passengers cannot unboard until the car has invoked unload
         /*if(car.getState() != Car.State.UNLOADING) {
 
@@ -79,18 +69,10 @@ public class Passenger implements Runnable {
         } */
     }
 
-    public void assignCar(int carID) {
-        this.carID = carID;
-    }
-
     @Override
     public void run() {
-
         wander(); // wander first
-
-        if(state == State.INLINE) // try to board once in line
-            board();
-
+        board();
         unboard();
     }
 }
