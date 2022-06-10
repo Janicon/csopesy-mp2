@@ -12,8 +12,10 @@ public class Car implements Runnable{
         this.unloadZone = unloadZone;
 		this.slotsAvailable = slotsAvailable;
 		this.boardFinished = boardFinished;
+		/*
         thread = new Thread(this);
-        thread.start(); 
+        thread.start();
+		 */
     }
 
 	@Override
@@ -27,13 +29,14 @@ public class Car implements Runnable{
 	}
 
 	void load() {
-		System.out.println("Car " + id + " enters load station");
+		System.out.println("Car " + id + " attempts to enter load station");
 		try {
 			loadZone.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
+		System.out.println("Car " + id + " enters load station");
 		slotsAvailable.release(maxCapacity);
 
 		try {
@@ -45,19 +48,19 @@ public class Car implements Runnable{
 	}
 	
 	void runCar() {
-		System.out.println("Car " + id + " leaves station");
+		System.out.println("Car " + id + " begins trip");
 		try {
 			Thread.sleep(1000); // Decide on fixed duration
 		} catch(InterruptedException e) {}
 	}
 	
 	void unload() {
-		System.out.println("Car " + id + " enters unload station");
-
+		System.out.println("Car " + id + " attempts to enter unload station");
 		try {
 			unloadZone.acquire();
 		} catch(InterruptedException e) {
 		}
+		System.out.println("Car " + id + " enters unload station");
 
 		// TODO: Check for something to do
 
