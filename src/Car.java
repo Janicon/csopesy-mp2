@@ -2,20 +2,18 @@ import java.util.concurrent.Semaphore;
 
 public class Car implements Runnable{
 	private int id, maxCapacity;
-	Semaphore loadZone, unloadZone, slotsAvailable, boardFinished;
-	private Thread thread;
+	Semaphore loadZone, unloadZone, slotsAvailable, boardFinished, slotsTaken, unboardFinished;
 	
-	Car(int id, int maxCapacity, Semaphore unloadZone, Semaphore loadZone, Semaphore slotsAvailable, Semaphore boardFinished){
-        this.id = id;
+	Car(int id, int maxCapacity, Semaphore unloadZone, Semaphore loadZone, Semaphore slotsAvailable, Semaphore boardFinished, 
+			Semaphore unboardFinished, Semaphore slotsTaken){
+        this.slotsTaken = slotsTaken;
+		this.id = id;
 		this.loadZone = loadZone;
 		this.maxCapacity = maxCapacity;
         this.unloadZone = unloadZone;
 		this.slotsAvailable = slotsAvailable;
 		this.boardFinished = boardFinished;
-		/*
-        thread = new Thread(this);
-        thread.start();
-		 */
+		this.unboardFinished = unboardFinished;
     }
 
 	@Override
@@ -29,7 +27,6 @@ public class Car implements Runnable{
 	}
 
 	void load() {
-		System.out.println("Car " + id + " attempts to enter load station");
 		try {
 			loadZone.acquire();
 		} catch (InterruptedException e) {
@@ -43,6 +40,8 @@ public class Car implements Runnable{
 			boardFinished.acquire();
 		} catch(InterruptedException e) {
 		}
+		
+		System.out.println("All Aboard");
 
 		loadZone.release();
 	}
@@ -50,20 +49,26 @@ public class Car implements Runnable{
 	void runCar() {
 		System.out.println("Car " + id + " begins trip");
 		try {
-			Thread.sleep(1000); // Decide on fixed duration
+			Thread.sleep(1000);
 		} catch(InterruptedException e) {}
 	}
 	
 	void unload() {
-		System.out.println("Car " + id + " attempts to enter unload station");
 		try {
 			unloadZone.acquire();
 		} catch(InterruptedException e) {
 		}
 		System.out.println("Car " + id + " enters unload station");
 
-		// TODO: Check for something to do
-
+		slotsTaken.release(maxCapacity);
+		
+		try {
+			unboardFinished.acquire();
+		} catch(InterruptedException e) {
+		}
+		
+		System.out.println("All Ashore");
+		
 		unloadZone.release();
 	}
 	
