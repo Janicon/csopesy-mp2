@@ -1,4 +1,5 @@
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 public class Passenger implements Runnable {
 
@@ -11,13 +12,17 @@ public class Passenger implements Runnable {
     private Random random = new Random();
     private State state;
     private int id;
-    private Car car;
-    // private Station station;
-    private Object sharedObj = new Object(); // might need shared lock between car and passenger to invoke notify
+    private int carID;
+    private Station station;
+    private Semaphore sem;
 
-    public Passenger(int id) {
-        this.id = id; // might not be needed
+    // Semaphore here is the same one assigned to station (probably need a better way to have the semaphores shared)
+    public Passenger(int id, Station station, Semaphore numCapacity,
+                     Semaphore loadZone, Semaphore unloadZone) {
+        this.id = id;
+        this.station = station;
         this.state = State.WANDERING;
+        this.sem = numCapacity;
     }
 
     /*
@@ -28,6 +33,8 @@ public class Passenger implements Runnable {
           served.
      */
     public void wander() {
+
+        System.out.println("Passenger " + id + " is wandering.");
 
         try {
             Thread.sleep(random.nextInt(5000)); // tentative random time
@@ -43,30 +50,24 @@ public class Passenger implements Runnable {
     public void board() {
 
         // Passengers cannot board until the car has invoked load
-        while(Station.carInStation.getState() != Car.State.LOADING) { // assumed car state
-
-            // wait if car is not yet in loading state
-            synchronized (sharedObj) {
-                try {
-                    sharedObj.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        try {
+            // acquire lock (numCapacity -= 1) // if sem == 0, will be stuck in waiting state
+            sem.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
+        System.out.println("Passenger " + id + " has boarded.");
+
         // Execute rest of the code
-        assignCar(Station.carInStation); // assign the car to the passenger
+        assignCar(station.getCarInLoading()); // assign the car to the passenger
         state = State.DONE; // the passenger has boarded
-
-        // TODO: Situations where the car becomes full
-
     }
 
     public void unboard() {
 
         // Passengers cannot unboard until the car has invoked unload
-        if(car.getState() != Car.State.UNLOADING) {
+        /*if(car.getState() != Car.State.UNLOADING) {
 
             // wait again until notified by car thread once unloading
             synchronized (sharedObj) {
@@ -76,11 +77,11 @@ public class Passenger implements Runnable {
                     e.printStackTrace();
                 }
             }
-        }
+        } */
     }
 
-    public void assignCar(Car car) {
-        this.car = car;
+    public void assignCar(int carID) {
+        this.carID = carID;
     }
 
     @Override

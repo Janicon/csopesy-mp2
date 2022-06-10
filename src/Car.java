@@ -5,10 +5,10 @@ public class Car implements Runnable{
 	enum State { WANDERING, INLINE, DONE }
 	
 	Station station;
-	Semaphore loadZone, unloadZone;
+	Semaphore loadZone, unloadZone, numCapacity;
 	private Thread thread;
 	
-	Car(int id, Semaphore unloadZone, Semaphore loadZone){
+	Car(int id, Semaphore unloadZone, Semaphore loadZone, Semaphore numCapacity){
         this.loadZone = loadZone;
         this.unloadZone = unloadZone;
         thread = new Thread(this);
@@ -19,10 +19,15 @@ public class Car implements Runnable{
 		// TODO Auto-generated method stub
 		
 	}
-	
+
 	void load() {
-		loadZone.acquire();
-		station.load();
+		try {
+			loadZone.acquire();
+			//station.load();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 		loadZone.release();
 	}
 	
@@ -34,7 +39,7 @@ public class Car implements Runnable{
 		unloadZone.acquire();
 		station.unload();
 		unloadZone.release();
-	}
+	} */
 	
 	
 
