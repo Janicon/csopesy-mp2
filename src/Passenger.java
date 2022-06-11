@@ -59,9 +59,8 @@ public class Passenger implements Runnable {
         }
     	
         System.out.println("Passenger " + id + " has unboarded.");
-        
-        if(slotsTaken.availablePermits() == 0)
-            unboardFinished.release();
+        unboardFinished.release();
+
     }
 
     @Override

@@ -63,8 +63,9 @@ public class Car implements Runnable{
 		slotsTaken.release(maxCapacity);
 		
 		try {
-			unboardFinished.acquire();
+			unboardFinished.acquire(maxCapacity);
 		} catch(InterruptedException e) {
+
 		}
 		
 		System.out.println("All Ashore");
