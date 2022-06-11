@@ -9,13 +9,18 @@ public class Passenger implements Runnable {
     private Semaphore boardFinished;
     private Semaphore slotsTaken;
     private Semaphore unboardFinished;
-    
-    public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished) {
+    private Semaphore numFinished;
+    private Semaphore isDone;
+
+    public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished,
+                     Semaphore slotsTaken, Semaphore unboardFinished, Semaphore numFinished, Semaphore isDone) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;
         this.boardFinished = boardFinished;
         this.unboardFinished = unboardFinished;
+        this.numFinished = numFinished;
+        this.isDone = isDone;
     }
 
     /*
@@ -51,15 +56,24 @@ public class Passenger implements Runnable {
     }
 
     public void unboard() {
-    	
-    	try {
-    		slotsTaken.acquire();
+
+        try {
+            slotsTaken.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    	
+
         System.out.println("Passenger " + id + " has unboarded.");
         unboardFinished.release();
+
+        try {
+            numFinished.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        if(numFinished.availablePermits() == 0)
+            isDone.release();
 
     }
 
