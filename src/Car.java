@@ -2,12 +2,12 @@ import java.util.concurrent.Semaphore;
 
 public class Car implements Runnable{
 	private int id, maxCapacity;
-	Semaphore loadZone, unloadZone, slotsAvailable, boardFinished, slotsTaken, unboardFinished, numFinished;
-	Semaphore isDone;
-
+	Semaphore loadZone, unloadZone, slotsAvailable, boardFinished, slotsTaken, unboardFinished, numFinished, carsRunning;
+	private boolean skipBoarding = false;
+	
 	Car(int id, int maxCapacity, Semaphore unloadZone, Semaphore loadZone,
 		Semaphore slotsAvailable, Semaphore boardFinished, Semaphore unboardFinished,
-		Semaphore slotsTaken, Semaphore numFinished, Semaphore isDone){
+		Semaphore slotsTaken, Semaphore numFinished, Semaphore carsRunning){
 		this.slotsTaken = slotsTaken;
 		this.id = id;
 		this.loadZone = loadZone;
@@ -17,41 +17,52 @@ public class Car implements Runnable{
 		this.boardFinished = boardFinished;
 		this.unboardFinished = unboardFinished;
 		this.numFinished = numFinished;
-		this.isDone = isDone;
+		this.carsRunning = carsRunning;
 	}
 
 	@Override
 	public void run() {
-		while(isDone.availablePermits() == 0) {
+		while(numFinished.availablePermits() >= maxCapacity) {
 			load();
-
-			//System.out.println("Car " + id + " is running");
-			if(isDone.availablePermits() == 0)
-			{
-				runCar();
-				unload();
-			}
-			//System.out.println("Car " + id + " is done");
+			
+			if(skipBoarding) {
+				break;
+	    	}
+			
+			runCar();
+			unload();
+			
 		}
+		
+		try {
+			carsRunning.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		if(carsRunning.availablePermits() == 0)
+			System.out.println("\nProcess is Finished");
 	}
 
 	void load() {
+		
 		try {
 			loadZone.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		
+		if(numFinished.availablePermits() < maxCapacity) {
+			skipBoarding = true;
+    		return;
+    	}
 
 		System.out.println("Car " + id + " enters load station");
 		slotsAvailable.release(maxCapacity);
-
 		try {
 			boardFinished.acquire();
 		} catch(InterruptedException e) {
 		}
-
-		if(isDone.availablePermits() == 1)
-			return;
 
 		System.out.println("All Aboard");
 		loadZone.release();
@@ -89,7 +100,6 @@ public class Car implements Runnable{
 	{
 		System.out.println();
 		System.out.println("Num Finished: " + numFinished.availablePermits());
-		System.out.println("isDone: " + isDone.availablePermits());
 		System.out.println();
 	}
 

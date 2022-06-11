@@ -4,23 +4,23 @@ import java.util.concurrent.Semaphore;
 public class Passenger implements Runnable {
 
     private Random random = new Random();
-    private int id;
+    private int id, maxCapacity;
     private Semaphore slotsAvailable;
     private Semaphore boardFinished;
     private Semaphore slotsTaken;
     private Semaphore unboardFinished;
     private Semaphore numFinished;
-    private Semaphore isDone;
+    private boolean skipBoarding = false;
 
     public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished,
-                     Semaphore slotsTaken, Semaphore unboardFinished, Semaphore numFinished, Semaphore isDone) {
+                     Semaphore slotsTaken, Semaphore unboardFinished, Semaphore numFinished, int maxCapacity) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;
         this.boardFinished = boardFinished;
         this.unboardFinished = unboardFinished;
         this.numFinished = numFinished;
-        this.isDone = isDone;
+        this.maxCapacity = maxCapacity;
     }
 
     /*
@@ -43,8 +43,21 @@ public class Passenger implements Runnable {
     }
 
     public void board() {
+    	
+    	if(numFinished.availablePermits() < maxCapacity) {
+    		skipBoarding = true;
+    		boardFinished.release();
+    		return;
+    	}
+    	
         try {
             slotsAvailable.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        try {
+            numFinished.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -66,15 +79,7 @@ public class Passenger implements Runnable {
         System.out.println("Passenger " + id + " has unboarded.");
         unboardFinished.release();
 
-        try {
-            numFinished.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        //System.out.println("Number of Permits: " + numFinished.availablePermits());
         if(numFinished.availablePermits() == 0) {
-            isDone.release();
             boardFinished.release();
         }
 
@@ -84,6 +89,7 @@ public class Passenger implements Runnable {
     public void run() {
         wander();
         board();
-        unboard();
+        if(!skipBoarding)
+        	unboard();
     }
 }

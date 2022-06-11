@@ -7,7 +7,7 @@ public class Driver {
         Scanner sc = new Scanner(System.in);
 
         // For testing
-        numPassengers = 6;
+        numPassengers = 5;
         maxCapacity = 2;
         numCars = 2;
 
@@ -32,7 +32,7 @@ public class Driver {
         Semaphore loadZone, unloadZone;
         Semaphore boardFinished, unboardFinished;
         Semaphore numFinished;
-        Semaphore isDone;
+        Semaphore carsRunning;
 
         slotsAvailable = new Semaphore(0);
         loadZone = new Semaphore(1);
@@ -41,29 +41,19 @@ public class Driver {
         unboardFinished = new Semaphore(0);
         slotsTaken = new Semaphore(0);
         numFinished = new Semaphore(numPassengers);
-        isDone = new Semaphore(1);
+        carsRunning = new Semaphore(numCars);
 
         for(int i = 0; i < numPassengers; i++) {
             Thread thread = new Thread(new Passenger(i, slotsAvailable, boardFinished, slotsTaken,
-                    unboardFinished, numFinished, isDone));
+                    unboardFinished, numFinished, maxCapacity));
             thread.start();
         }
 
         for(int i = 0; i < numCars; i++) {
             Thread thread = new Thread(new Car(i, maxCapacity, unloadZone, loadZone,
-                        slotsAvailable, boardFinished, unboardFinished, slotsTaken, numFinished, isDone));
+                        slotsAvailable, boardFinished, unboardFinished, slotsTaken, numFinished, carsRunning));
             thread.start();
         }
-
-        try {
-            isDone.acquire();
-        } catch(InterruptedException e) {
-        }
-
-        while(isDone.availablePermits() == 0);
-
-        System.out.println("\nProcess is Finished");
-
-        return;
+        
     }
 }
