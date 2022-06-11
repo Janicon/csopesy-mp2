@@ -62,7 +62,7 @@ public class Driver {
 
         while(isDone.availablePermits() == 0);
 
-        System.out.println("Process is Finished");
+        System.out.println("\nProcess is Finished");
 
         return;
     }

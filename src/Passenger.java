@@ -72,8 +72,11 @@ public class Passenger implements Runnable {
             e.printStackTrace();
         }
 
-        if(numFinished.availablePermits() == 0)
+        //System.out.println("Number of Permits: " + numFinished.availablePermits());
+        if(numFinished.availablePermits() == 0) {
             isDone.release();
+            boardFinished.release();
+        }
 
     }
 

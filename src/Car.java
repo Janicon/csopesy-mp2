@@ -22,10 +22,16 @@ public class Car implements Runnable{
 
 	@Override
 	public void run() {
-		while(true) {
+		while(isDone.availablePermits() == 0) {
 			load();
-			runCar();
-			unload();
+
+			//System.out.println("Car " + id + " is running");
+			if(isDone.availablePermits() == 0)
+			{
+				runCar();
+				unload();
+			}
+			//System.out.println("Car " + id + " is done");
 		}
 	}
 
@@ -44,8 +50,10 @@ public class Car implements Runnable{
 		} catch(InterruptedException e) {
 		}
 
-		System.out.println("All Aboard");
+		if(isDone.availablePermits() == 1)
+			return;
 
+		System.out.println("All Aboard");
 		loadZone.release();
 	}
 
@@ -57,6 +65,7 @@ public class Car implements Runnable{
 	}
 
 	void unload() {
+
 		try {
 			unloadZone.acquire();
 		} catch(InterruptedException e) {
@@ -76,6 +85,12 @@ public class Car implements Runnable{
 		unloadZone.release();
 	}
 
-
+	void printKeyAvailability()
+	{
+		System.out.println();
+		System.out.println("Num Finished: " + numFinished.availablePermits());
+		System.out.println("isDone: " + isDone.availablePermits());
+		System.out.println();
+	}
 
 }
