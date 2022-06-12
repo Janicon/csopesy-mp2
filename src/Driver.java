@@ -49,7 +49,5 @@ public class Driver {
             thread.start();
         }
 
-        System.out.println("All rides completed.");
-        
     }
 }
