@@ -4,18 +4,23 @@ import java.util.concurrent.Semaphore;
 public class Passenger implements Runnable {
 
     private Random random = new Random();
-    private int id;
+    private int id, maxCapacity;
     private Semaphore slotsAvailable;
     private Semaphore boardFinished;
     private Semaphore slotsTaken;
     private Semaphore unboardFinished;
+    private Semaphore totalPassengers;
+    private Semaphore loadZone;
     
-    public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished) {
+    public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished, Semaphore totalPassengers,
+                     int maxCapacity, Semaphore loadZone) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;
         this.boardFinished = boardFinished;
         this.unboardFinished = unboardFinished;
+        this.totalPassengers = totalPassengers;
+        this.loadZone = loadZone;
     }
 
     /*
@@ -38,11 +43,24 @@ public class Passenger implements Runnable {
     }
 
     public void board() {
+
         try {
-            slotsAvailable.acquire();
+            totalPassengers.acquire();
+
+            // loadZone to see if there is still a car loading
+            if(loadZone.availablePermits() == 0) {
+                slotsAvailable.acquire();
+            }
+            else {
+                Thread.currentThread().interrupt();
+            }
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        if(Thread.currentThread().isInterrupted())
+            return;
 
         System.out.println("Passenger " + id + " has boarded.");
 
@@ -51,6 +69,10 @@ public class Passenger implements Runnable {
     }
 
     public void unboard() {
+
+        // skip method if thread was interrupted already (means the process should be done)
+        if(Thread.currentThread().isInterrupted())
+            return;
     	
     	try {
     		slotsTaken.acquire();
@@ -68,5 +90,7 @@ public class Passenger implements Runnable {
         wander();
         board();
         unboard();
+
+        System.out.println("Passenger " + id + " is done.");
     }
 }
