@@ -1,8 +1,10 @@
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.ArrayList;
 
 public class Driver {
     public static void main(String[] args) {
+        ArrayList<Thread> threads = new ArrayList<Thread>();
         int numPassengers, maxCapacity, numCars;
         Scanner sc = new Scanner(System.in);
 
@@ -40,14 +42,26 @@ public class Driver {
         for(int i = 0; i < numPassengers; i++) {
             Thread thread = new Thread(new Passenger(i, slotsAvailable, boardFinished, slotsTaken, unboardFinished, totalPassengers,
                     maxCapacity, loadZone));
+            threads.add(thread);
             thread.start();
         }
 
         for(int i = 0; i < numCars; i++) {
             Thread thread = new Thread(new Car(i, maxCapacity, unloadZone, loadZone, slotsAvailable, boardFinished, unboardFinished, slotsTaken,
                     totalPassengers));
+            threads.add(thread);
             thread.start();
         }
+
+        try {
+            for (Thread thread : threads) {
+                thread.join();
+            }
+        } catch (InterruptedException e) {
+
+        }
+
+        System.out.println("All rides completed");
 
     }
 }
