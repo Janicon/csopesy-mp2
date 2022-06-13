@@ -2,10 +2,11 @@ import java.util.concurrent.Semaphore;
 
 public class Car implements Runnable{
 	private int id, maxCapacity;
-	Semaphore loadZone, unloadZone, slotsAvailable, boardFinished, slotsTaken, unboardFinished, totalPassengers;
+	Semaphore loadZone, unloadZone, slotsAvailable, boardFinished, slotsTaken, unboardFinished, totalPassengers,
+		nTrips;
 	
 	Car(int id, int maxCapacity, Semaphore unloadZone, Semaphore loadZone, Semaphore slotsAvailable, Semaphore boardFinished, 
-			Semaphore unboardFinished, Semaphore slotsTaken, Semaphore totalPassengers){
+			Semaphore unboardFinished, Semaphore slotsTaken, Semaphore totalPassengers, Semaphore nTrips){
         this.slotsTaken = slotsTaken;
 		this.id = id;
 		this.loadZone = loadZone;
@@ -15,6 +16,7 @@ public class Car implements Runnable{
 		this.boardFinished = boardFinished;
 		this.unboardFinished = unboardFinished;
 		this.totalPassengers = totalPassengers;
+		this.nTrips = nTrips;
     }
 
 	@Override
@@ -39,6 +41,9 @@ public class Car implements Runnable{
 				Thread.currentThread().interrupt();
 				return;
 			}
+
+			// decrement numTrips
+			nTrips.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

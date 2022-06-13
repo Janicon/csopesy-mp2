@@ -11,9 +11,10 @@ public class Passenger implements Runnable {
     private Semaphore unboardFinished;
     private Semaphore totalPassengers;
     private Semaphore loadZone;
+    private  Semaphore nTrips;
     
     public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished, Semaphore totalPassengers,
-                     int maxCapacity, Semaphore loadZone) {
+                     int maxCapacity, Semaphore loadZone, Semaphore nTrips) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;
@@ -21,6 +22,7 @@ public class Passenger implements Runnable {
         this.unboardFinished = unboardFinished;
         this.totalPassengers = totalPassengers;
         this.loadZone = loadZone;
+        this.nTrips = nTrips;
     }
 
     /*
@@ -45,11 +47,11 @@ public class Passenger implements Runnable {
     public void board() {
 
         try {
-            totalPassengers.acquire();
 
             // loadZone to see if there is still a car loading
-            if(loadZone.availablePermits() == 0) {
+            if(loadZone.availablePermits() == 0 || nTrips.availablePermits() > 0) {
                 slotsAvailable.acquire();
+                totalPassengers.acquire();
             }
             else {
                 Thread.currentThread().interrupt();

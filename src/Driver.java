@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Driver {
     public static void main(String[] args) {
         ArrayList<Thread> threads = new ArrayList<Thread>();
-        int numPassengers, maxCapacity, numCars;
+        int numPassengers, maxCapacity, numCars, numTrips;
         Scanner sc = new Scanner(System.in);
 
         // For testing
@@ -28,9 +28,9 @@ public class Driver {
 
         System.out.println();
 
+        numTrips = numPassengers / maxCapacity;
 
-
-        Semaphore slotsAvailable, loadZone, unloadZone, boardFinished, unboardFinished, slotsTaken, totalPassengers;
+        Semaphore slotsAvailable, loadZone, unloadZone, boardFinished, unboardFinished, slotsTaken, totalPassengers, nTrips;
         slotsAvailable = new Semaphore(0);
         loadZone = new Semaphore(1);
         unloadZone = new Semaphore(1);
@@ -38,17 +38,19 @@ public class Driver {
         unboardFinished = new Semaphore(0);
         slotsTaken = new Semaphore(0);
         totalPassengers = new Semaphore(numPassengers);
+        nTrips = new Semaphore(numTrips);
+
 
         for(int i = 0; i < numPassengers; i++) {
             Thread thread = new Thread(new Passenger(i, slotsAvailable, boardFinished, slotsTaken, unboardFinished, totalPassengers,
-                    maxCapacity, loadZone));
+                    maxCapacity, loadZone, nTrips));
             threads.add(thread);
             thread.start();
         }
 
         for(int i = 0; i < numCars; i++) {
             Thread thread = new Thread(new Car(i, maxCapacity, unloadZone, loadZone, slotsAvailable, boardFinished, unboardFinished, slotsTaken,
-                    totalPassengers));
+                    totalPassengers, nTrips));
             threads.add(thread);
             thread.start();
         }
