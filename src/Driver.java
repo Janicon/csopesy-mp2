@@ -28,7 +28,11 @@ public class Driver {
 
         System.out.println();
 
-        numTrips = numPassengers / maxCapacity;
+
+        if(maxCapacity == 0)
+            numTrips = 0;
+        else
+            numTrips = numPassengers / maxCapacity;
 
         Semaphore slotsAvailable, loadZone, unloadZone, boardFinished, unboardFinished, slotsTaken, totalPassengers, nTrips;
         slotsAvailable = new Semaphore(0);

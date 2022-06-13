@@ -21,6 +21,7 @@ public class Passenger implements Runnable {
         this.boardFinished = boardFinished;
         this.unboardFinished = unboardFinished;
         this.totalPassengers = totalPassengers;
+        this.maxCapacity = maxCapacity;
         this.loadZone = loadZone;
         this.nTrips = nTrips;
     }
@@ -49,7 +50,7 @@ public class Passenger implements Runnable {
         try {
 
             // loadZone to see if there is still a car loading
-            if(loadZone.availablePermits() == 0 || nTrips.availablePermits() > 0) {
+            if((loadZone.availablePermits() == 0 || nTrips.availablePermits() > 0) && maxCapacity > 0) {
                 slotsAvailable.acquire();
                 totalPassengers.acquire();
             }

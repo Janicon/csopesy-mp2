@@ -32,6 +32,12 @@ public class Car implements Runnable{
 
 	void load() {
 		try {
+			// edge case if car capacity is 0, then terminate car
+			if(maxCapacity == 0) {
+				Thread.currentThread().interrupt();
+				return;
+			}
+
 			loadZone.acquire();
 
 			// enter load zone first, then check passenger count
