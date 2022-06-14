@@ -1,11 +1,19 @@
 import java.util.concurrent.Semaphore;
 
-public class Car implements Runnable{
-	private int id, maxCapacity;
-	Semaphore loadZone, unloadZone, slotsAvailable, boardFinished, slotsTaken, unboardFinished, totalPassengers,
-		nTrips;
+public class Car implements Runnable {
+
+	private int id;
+	private int maxCapacity;
+	private Semaphore loadZone;
+	private Semaphore unloadZone;
+	private Semaphore slotsAvailable;
+	private Semaphore boardFinished;
+	private Semaphore slotsTaken;
+	private Semaphore unboardFinished;
+	private Semaphore totalPassengers;
+	private Semaphore nTrips;
 	
-	Car(int id, int maxCapacity, Semaphore unloadZone, Semaphore loadZone, Semaphore slotsAvailable, Semaphore boardFinished, 
+	public Car(int id, int maxCapacity, Semaphore unloadZone, Semaphore loadZone, Semaphore slotsAvailable, Semaphore boardFinished, 
 			Semaphore unboardFinished, Semaphore slotsTaken, Semaphore totalPassengers, Semaphore nTrips){
         this.slotsTaken = slotsTaken;
 		this.id = id;
@@ -26,11 +34,10 @@ public class Car implements Runnable{
 			runCar();
 			unload();
 		}
-
-		System.out.println("Car " + id + " is done.");
+		//System.out.println("Car " + id + " is done.");
 	}
 
-	void load() {
+	private void load() {
 		try {
 			// edge case if car capacity is 0, then terminate car
 			if(maxCapacity == 0) {
@@ -62,15 +69,14 @@ public class Car implements Runnable{
 
 		try {
 			boardFinished.acquire();
-		} catch(InterruptedException e) {
-		}
+		} catch(InterruptedException e) {}
 		
 		System.out.println("All Aboard Car " + id);
 
 		loadZone.release();
 	}
 	
-	void runCar() {
+	private void runCar() {
 
 		if(Thread.currentThread().isInterrupted())
 			return;
@@ -79,17 +85,17 @@ public class Car implements Runnable{
 		try {
 			Thread.sleep(1000);
 		} catch(InterruptedException e) {}
+
 	}
 	
-	void unload() {
+	private void unload() {
 
 		if(Thread.currentThread().isInterrupted())
 			return;
 
 		try {
 			unloadZone.acquire();
-		} catch(InterruptedException e) {
-		}
+		} catch(InterruptedException e) {}
 
 		System.out.println("Car " + id + " enters unload station");
 
@@ -97,14 +103,11 @@ public class Car implements Runnable{
 		
 		try {
 			unboardFinished.acquire(maxCapacity);
-		} catch(InterruptedException e) {
-		}
+		} catch(InterruptedException e) {}
 		
 		System.out.println("All Ashore from Car " + id);
 		
 		unloadZone.release();
 	}
 	
-	
-
 }

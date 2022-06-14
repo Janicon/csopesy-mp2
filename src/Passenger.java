@@ -33,7 +33,7 @@ public class Passenger implements Runnable {
         - The line in this case may not necessarily be first come first
           served.
      */
-    public void wander() {
+    private void wander() {
 
         System.out.println("Passenger " + id + " is wandering.");
 
@@ -45,7 +45,7 @@ public class Passenger implements Runnable {
         }
     }
 
-    public void board() {
+    private void board() {
 
         try {
 
@@ -53,8 +53,8 @@ public class Passenger implements Runnable {
             if((loadZone.availablePermits() == 0 || nTrips.availablePermits() > 0) && maxCapacity > 0) {
                 slotsAvailable.acquire();
                 totalPassengers.acquire();
-            }
-            else {
+            } else {
+                System.out.println("Not enough passengers left for passenger " + id + " to board");
                 Thread.currentThread().interrupt();
             }
 
@@ -71,11 +71,12 @@ public class Passenger implements Runnable {
             boardFinished.release();
     }
 
-    public void unboard() {
+    private void unboard() {
 
         // skip method if thread was interrupted already (means the process should be done)
-        if(Thread.currentThread().isInterrupted())
+        if(Thread.currentThread().isInterrupted()) {
             return;
+        }
     	
     	try {
     		slotsTaken.acquire();
@@ -93,7 +94,7 @@ public class Passenger implements Runnable {
         wander();
         board();
         unboard();
-
-        System.out.println("Passenger " + id + " is done.");
+        //System.out.println("Passenger " + id + " is done.");
     }
+
 }

@@ -4,14 +4,10 @@ import java.util.ArrayList;
 
 public class Driver {
     public static void main(String[] args) {
+        
         ArrayList<Thread> threads = new ArrayList<Thread>();
         int numPassengers, maxCapacity, numCars, numTrips;
         Scanner sc = new Scanner(System.in);
-
-        // For testing
-        numPassengers = 6;
-        maxCapacity = 2;
-        numCars = 2;
 
         System.out.print("Number of Passengers: ");
         numPassengers = sc.nextInt();
@@ -28,22 +24,20 @@ public class Driver {
 
         System.out.println();
 
-
-        if(maxCapacity == 0)
+        if(maxCapacity == 0) {
             numTrips = 0;
-        else
+        } else {
             numTrips = numPassengers / maxCapacity;
+        }
 
-        Semaphore slotsAvailable, loadZone, unloadZone, boardFinished, unboardFinished, slotsTaken, totalPassengers, nTrips;
-        slotsAvailable = new Semaphore(0);
-        loadZone = new Semaphore(1);
-        unloadZone = new Semaphore(1);
-        boardFinished = new Semaphore(0);
-        unboardFinished = new Semaphore(0);
-        slotsTaken = new Semaphore(0);
-        totalPassengers = new Semaphore(numPassengers);
-        nTrips = new Semaphore(numTrips);
-
+        Semaphore slotsAvailable = new Semaphore(0);
+        Semaphore loadZone = new Semaphore(1);
+        Semaphore unloadZone = new Semaphore(1);
+        Semaphore boardFinished = new Semaphore(0);
+        Semaphore unboardFinished = new Semaphore(0);
+        Semaphore slotsTaken = new Semaphore(0);
+        Semaphore totalPassengers = new Semaphore(numPassengers);
+        Semaphore nTrips = new Semaphore(numTrips);
 
         for(int i = 0; i < numPassengers; i++) {
             Thread thread = new Thread(new Passenger(i, slotsAvailable, boardFinished, slotsTaken, unboardFinished, totalPassengers,
