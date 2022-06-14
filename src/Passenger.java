@@ -12,9 +12,10 @@ public class Passenger implements Runnable {
     private Semaphore totalPassengers;
     private Semaphore loadZone;
     private  Semaphore nTrips;
+    private Station station;
     
     public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished, Semaphore totalPassengers,
-                     int maxCapacity, Semaphore loadZone, Semaphore nTrips, int numCars) {
+                     int maxCapacity, Semaphore loadZone, Semaphore nTrips, int numCars, Station station) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;
@@ -25,6 +26,7 @@ public class Passenger implements Runnable {
         this.loadZone = loadZone;
         this.nTrips = nTrips;
         this.numCars = numCars;
+        this.station = station;
     }
 
     /*
@@ -75,8 +77,18 @@ public class Passenger implements Runnable {
 
         System.out.println("Passenger " + id + " has boarded.");
 
-        if(slotsAvailable.availablePermits() == 0)
-            boardFinished.release();
+        try {
+            station.boardedCountMutex.acquire();
+
+                station.boardedCount++;
+                if(station.boardedCount == maxCapacity) {
+                    boardFinished.release();
+                    station.boardedCount = 0;
+                }
+
+            station.boardedCountMutex.release();
+        } catch (InterruptedException e) {}
+
     }
 
     private void unboard() {
