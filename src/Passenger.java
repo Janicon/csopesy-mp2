@@ -1,36 +1,41 @@
+
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 
 public class Passenger implements Runnable {
 
     private Random random = new Random();
-    private int id, maxCapacity;
+    private int id, maxCapacity, numCars;
     private Semaphore slotsAvailable;
     private Semaphore boardFinished;
     private Semaphore slotsTaken;
     private Semaphore unboardFinished;
-    private Semaphore numFinished;
-    private boolean skipBoarding = false;
+    private Semaphore totalPassengers;
+    private Semaphore loadZone;
+    private  Semaphore nTrips;
 
-    public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished,
-                     Semaphore slotsTaken, Semaphore unboardFinished, Semaphore numFinished, int maxCapacity) {
+    public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished, Semaphore totalPassengers,
+                     int maxCapacity, int numCars, Semaphore loadZone, Semaphore nTrips) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;
         this.boardFinished = boardFinished;
         this.unboardFinished = unboardFinished;
-        this.numFinished = numFinished;
+        this.totalPassengers = totalPassengers;
         this.maxCapacity = maxCapacity;
+        this.numCars = numCars;
+        this.loadZone = loadZone;
+        this.nTrips = nTrips;
+
     }
 
     /*
         Passengers should wander around the park for a random amount
         of time before getting in line for the roller coaster.
-
         - The line in this case may not necessarily be first come first
           served.
      */
-    public void wander() {
+    private void wander() {
 
         System.out.println("Passenger " + id + " is wandering.");
 
@@ -42,25 +47,32 @@ public class Passenger implements Runnable {
         }
     }
 
-    public void board() {
-    	
-    	if(numFinished.availablePermits() < maxCapacity) {
-    		skipBoarding = true;
-    		boardFinished.release();
-    		return;
-    	}
-    	
+    private void board() {
+
+        if(maxCapacity == 0 || numCars == 0) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
         try {
+
             slotsAvailable.acquire();
+            totalPassengers.acquire();
+
+            // loadZone to see if there is still a car loading
+            if((loadZone.availablePermits() == 0 || nTrips.availablePermits() > 0) && maxCapacity > 0) {
+                // carry on with board() //
+            } else {
+                System.out.println("Not enough passengers left for passenger " + id + " to board");
+                Thread.currentThread().interrupt();
+            }
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        
-        try {
-            numFinished.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
+        if(Thread.currentThread().isInterrupted())
+            return;
 
         System.out.println("Passenger " + id + " has boarded.");
 
@@ -68,7 +80,12 @@ public class Passenger implements Runnable {
             boardFinished.release();
     }
 
-    public void unboard() {
+    private void unboard() {
+
+        // skip method if thread was interrupted already (means the process should be done)
+        if(Thread.currentThread().isInterrupted()) {
+            return;
+        }
 
         try {
             slotsTaken.acquire();
@@ -79,17 +96,14 @@ public class Passenger implements Runnable {
         System.out.println("Passenger " + id + " has unboarded.");
         unboardFinished.release();
 
-        if(numFinished.availablePermits() == 0) {
-            boardFinished.release();
-        }
-
     }
 
     @Override
     public void run() {
         wander();
         board();
-        if(!skipBoarding)
-        	unboard();
+        unboard();
+        //System.out.println("Passenger " + id + " is done.");
     }
+
 }

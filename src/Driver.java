@@ -1,17 +1,14 @@
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.ArrayList;
 
 public class Driver {
     public static void main(String[] args) {
-        int numPassengers, maxCapacity, numCars;
+
+        ArrayList<Thread> threads = new ArrayList<Thread>();
+        int numPassengers, maxCapacity, numCars, numTrips;
         Scanner sc = new Scanner(System.in);
 
-        // For testing
-        numPassengers = 5;
-        maxCapacity = 2;
-        numCars = 2;
-
-        /*
         System.out.print("Number of Passengers: ");
         numPassengers = sc.nextInt();
 
@@ -26,34 +23,45 @@ public class Driver {
         numCars = sc.nextInt();
 
         System.out.println();
-        */
 
-        Semaphore slotsAvailable, slotsTaken;
-        Semaphore loadZone, unloadZone;
-        Semaphore boardFinished, unboardFinished;
-        Semaphore numFinished;
-        Semaphore carsRunning;
+        if(maxCapacity == 0 || numCars == 0) {
+            numTrips = 0;
+        } else {
+            numTrips = numPassengers / maxCapacity;
+        }
 
-        slotsAvailable = new Semaphore(0);
-        loadZone = new Semaphore(1);
-        unloadZone = new Semaphore(1);
-        boardFinished = new Semaphore(0);
-        unboardFinished = new Semaphore(0);
-        slotsTaken = new Semaphore(0);
-        numFinished = new Semaphore(numPassengers);
-        carsRunning = new Semaphore(numCars);
+        Semaphore slotsAvailable = new Semaphore(0);
+        Semaphore loadZone = new Semaphore(1);
+        Semaphore unloadZone = new Semaphore(1);
+        Semaphore boardFinished = new Semaphore(0);
+        Semaphore unboardFinished = new Semaphore(0);
+        Semaphore slotsTaken = new Semaphore(0);
+        Semaphore totalPassengers = new Semaphore(numPassengers);
+        Semaphore nTrips = new Semaphore(numTrips);
 
         for(int i = 0; i < numPassengers; i++) {
-            Thread thread = new Thread(new Passenger(i, slotsAvailable, boardFinished, slotsTaken,
-                    unboardFinished, numFinished, maxCapacity));
+            Thread thread = new Thread(new Passenger(i, slotsAvailable, boardFinished, slotsTaken, unboardFinished, totalPassengers,
+                    maxCapacity, numCars, loadZone, nTrips));
+            threads.add(thread);
             thread.start();
         }
 
         for(int i = 0; i < numCars; i++) {
-            Thread thread = new Thread(new Car(i, maxCapacity, unloadZone, loadZone,
-                        slotsAvailable, boardFinished, unboardFinished, slotsTaken, numFinished, carsRunning));
+            Thread thread = new Thread(new Car(i, maxCapacity, numCars, unloadZone, loadZone,
+                    slotsAvailable, boardFinished, unboardFinished, slotsTaken, totalPassengers, nTrips));
+            threads.add(thread);
             thread.start();
         }
-        
+
+        try {
+            for (Thread thread : threads) {
+                thread.join();
+            }
+        } catch (InterruptedException e) {
+
+        }
+
+        System.out.println("All rides completed");
+
     }
 }

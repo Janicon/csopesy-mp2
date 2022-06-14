@@ -1,106 +1,116 @@
 import java.util.concurrent.Semaphore;
 
-public class Car implements Runnable{
-	private int id, maxCapacity;
-	Semaphore loadZone, unloadZone, slotsAvailable, boardFinished, slotsTaken, unboardFinished, numFinished, carsRunning;
-	private boolean skipBoarding = false;
-	
-	Car(int id, int maxCapacity, Semaphore unloadZone, Semaphore loadZone,
-		Semaphore slotsAvailable, Semaphore boardFinished, Semaphore unboardFinished,
-		Semaphore slotsTaken, Semaphore numFinished, Semaphore carsRunning){
+public class Car implements Runnable {
+
+	private int id;
+	private int maxCapacity;
+	private int numCars;
+	private Semaphore loadZone;
+	private Semaphore unloadZone;
+	private Semaphore slotsAvailable;
+	private Semaphore boardFinished;
+	private Semaphore slotsTaken;
+	private Semaphore unboardFinished;
+	private Semaphore totalPassengers;
+	private Semaphore nTrips;
+
+	public Car(int id, int maxCapacity, int numCars, Semaphore unloadZone, Semaphore loadZone, Semaphore slotsAvailable, Semaphore boardFinished,
+			   Semaphore unboardFinished, Semaphore slotsTaken, Semaphore totalPassengers, Semaphore nTrips){
 		this.slotsTaken = slotsTaken;
 		this.id = id;
+		this.numCars = numCars;
 		this.loadZone = loadZone;
 		this.maxCapacity = maxCapacity;
 		this.unloadZone = unloadZone;
 		this.slotsAvailable = slotsAvailable;
 		this.boardFinished = boardFinished;
 		this.unboardFinished = unboardFinished;
-		this.numFinished = numFinished;
-		this.carsRunning = carsRunning;
+		this.totalPassengers = totalPassengers;
+		this.nTrips = nTrips;
 	}
 
 	@Override
-	public void run() {
-		while(numFinished.availablePermits() >= maxCapacity) {
+	public synchronized void run() {
+		while(!Thread.currentThread().isInterrupted()) {
 			load();
-			
-			if(skipBoarding) {
-				break;
-	    	}
-			
 			runCar();
 			unload();
-			
 		}
-		
-		try {
-			carsRunning.acquire();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		if(carsRunning.availablePermits() == 0)
-			System.out.println("\nProcess is Finished");
+		//System.out.println("Car " + id + " is done.");
 	}
 
-	void load() {
-		
+	private void load() {
 		try {
+			// edge case if car capacity is 0, then terminate car
+			if(maxCapacity == 0 || numCars == 0) {
+				Thread.currentThread().interrupt();
+				return;
+			}
+
 			loadZone.acquire();
+
+			// enter load zone first, then check passenger count
+			if(totalPassengers.availablePermits() < maxCapacity) {
+				// release lock and interrupt thread
+				loadZone.release();
+				slotsAvailable.release(maxCapacity);
+				Thread.currentThread().interrupt();
+				return;
+			}
+
+			// decrement numTrips
+			nTrips.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		
-		if(numFinished.availablePermits() < maxCapacity) {
-			skipBoarding = true;
-    		return;
-    	}
+
+		if(Thread.currentThread().isInterrupted())
+			return;
 
 		System.out.println("Car " + id + " enters load station");
 		slotsAvailable.release(maxCapacity);
+
 		try {
 			boardFinished.acquire();
-		} catch(InterruptedException e) {
-		}
+		} catch(InterruptedException e) {}
 
-		System.out.println("All Aboard");
+		System.out.println("All Aboard Car " + id);
+
 		loadZone.release();
 	}
 
-	void runCar() {
+	private void runCar() {
+
+		if(Thread.currentThread().isInterrupted())
+			return;
+
 		System.out.println("Car " + id + " begins trip");
 		try {
 			Thread.sleep(1000);
 		} catch(InterruptedException e) {}
+
 	}
 
-	void unload() {
+	private void unload() {
+
+		if(Thread.currentThread().isInterrupted())
+			return;
 
 		try {
 			unloadZone.acquire();
-		} catch(InterruptedException e) {
-		}
+		} catch(InterruptedException e) {}
+
 		System.out.println("Car " + id + " enters unload station");
 
 		slotsTaken.release(maxCapacity);
 
 		try {
 			unboardFinished.acquire(maxCapacity);
-		} catch(InterruptedException e) {
+		} catch(InterruptedException e) {}
 
-		}
-
-		System.out.println("All Ashore");
+		System.out.println("All Ashore from Car " + id);
 
 		unloadZone.release();
-	}
-
-	void printKeyAvailability()
-	{
-		System.out.println();
-		System.out.println("Num Finished: " + numFinished.availablePermits());
-		System.out.println();
 	}
 
 }
