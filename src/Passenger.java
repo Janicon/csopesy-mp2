@@ -24,7 +24,7 @@ public class Passenger implements Runnable {
         this.maxCapacity = maxCapacity;
         this.loadZone = loadZone;
         this.nTrips = nTrips;
-        this.numCars = numCars;
+
     }
 
     /*
