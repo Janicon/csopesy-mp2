@@ -12,9 +12,10 @@ public class Passenger implements Runnable {
     private Semaphore totalPassengers;
     private Semaphore loadZone;
     private  Semaphore nTrips;
+    private int numCars;
     
     public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished, Semaphore totalPassengers,
-                     int maxCapacity, Semaphore loadZone, Semaphore nTrips) {
+                     int maxCapacity, Semaphore loadZone, Semaphore nTrips, int numCars) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;
@@ -24,6 +25,7 @@ public class Passenger implements Runnable {
         this.maxCapacity = maxCapacity;
         this.loadZone = loadZone;
         this.nTrips = nTrips;
+        this.numCars = numCars;
     }
 
     /*
@@ -46,6 +48,11 @@ public class Passenger implements Runnable {
     }
 
     private void board() {
+
+        if(maxCapacity == 0 || (maxCapacity == 0 && numCars > 0)) {
+            Thread.currentThread().interrupt();
+            return;
+        }
 
         try {
 
