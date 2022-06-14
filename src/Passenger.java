@@ -12,10 +12,9 @@ public class Passenger implements Runnable {
     private Semaphore totalPassengers;
     private Semaphore loadZone;
     private  Semaphore nTrips;
-    private int numCars;
     
     public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished, Semaphore totalPassengers,
-                     int maxCapacity, Semaphore loadZone, Semaphore nTrips, int numCars) {
+                     int maxCapacity, Semaphore loadZone, Semaphore nTrips) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;

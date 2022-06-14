@@ -41,7 +41,7 @@ public class Driver {
 
         for(int i = 0; i < numPassengers; i++) {
             Thread thread = new Thread(new Passenger(i, slotsAvailable, boardFinished, slotsTaken, unboardFinished, totalPassengers,
-                    maxCapacity, loadZone, nTrips, numCars));
+                    maxCapacity, loadZone, nTrips));
             threads.add(thread);
             thread.start();
         }
