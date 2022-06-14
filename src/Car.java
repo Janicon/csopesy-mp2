@@ -51,6 +51,7 @@ public class Car implements Runnable {
 			if(totalPassengers.availablePermits() < maxCapacity) {
 				// release lock and interrupt thread
 				loadZone.release();
+				slotsAvailable.release(maxCapacity);
 				Thread.currentThread().interrupt();
 				return;
 			}

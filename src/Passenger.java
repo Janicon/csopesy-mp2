@@ -49,10 +49,12 @@ public class Passenger implements Runnable {
 
         try {
 
+            slotsAvailable.acquire();
+            totalPassengers.acquire();
+
             // loadZone to see if there is still a car loading
             if((loadZone.availablePermits() == 0 || nTrips.availablePermits() > 0) && maxCapacity > 0) {
-                slotsAvailable.acquire();
-                totalPassengers.acquire();
+                // carry on with board() //
             } else {
                 System.out.println("Not enough passengers left for passenger " + id + " to board");
                 Thread.currentThread().interrupt();
