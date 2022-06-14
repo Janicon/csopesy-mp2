@@ -4,7 +4,7 @@ import java.util.concurrent.Semaphore;
 public class Passenger implements Runnable {
 
     private Random random = new Random();
-    private int id, maxCapacity;
+    private int id, maxCapacity, numCars;
     private Semaphore slotsAvailable;
     private Semaphore boardFinished;
     private Semaphore slotsTaken;
@@ -14,7 +14,7 @@ public class Passenger implements Runnable {
     private  Semaphore nTrips;
     
     public Passenger(int id, Semaphore slotsAvailable, Semaphore boardFinished, Semaphore slotsTaken, Semaphore unboardFinished, Semaphore totalPassengers,
-                     int maxCapacity, Semaphore loadZone, Semaphore nTrips) {
+                     int maxCapacity, Semaphore loadZone, Semaphore nTrips, int numCars) {
         this.id = id;
         this.slotsTaken = slotsTaken;
         this.slotsAvailable = slotsAvailable;
@@ -24,7 +24,7 @@ public class Passenger implements Runnable {
         this.maxCapacity = maxCapacity;
         this.loadZone = loadZone;
         this.nTrips = nTrips;
-
+        this.numCars = numCars;
     }
 
     /*
@@ -48,7 +48,7 @@ public class Passenger implements Runnable {
 
     private void board() {
 
-        if(maxCapacity == 0) {
+        if(maxCapacity == 0 || numCars == 0) {
             Thread.currentThread().interrupt();
             return;
         }
