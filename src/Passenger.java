@@ -49,7 +49,7 @@ public class Passenger implements Runnable {
 
     private void board() {
 
-        if(maxCapacity == 0 || (maxCapacity == 0 && numCars > 0)) {
+        if(maxCapacity == 0) {
             Thread.currentThread().interrupt();
             return;
         }
